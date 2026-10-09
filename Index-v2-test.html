@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FHINIX AI</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #101010;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      color: #ff3030;
+      text-align: center;
+    }
+
+    .painel {
+      max-width: 600px;
+      margin: 25px auto;
+      padding: 18px;
+      background: #1d1d1d;
+      border: 1px solid #8b2020;
+      border-radius: 12px;
+    }
+
+    #status {
+      color: #ff7070;
+    }
+
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 7px;
+    }
+
+    input {
+      background: #292929;
+      color: white;
+      border: 1px solid #555;
+    }
+
+    button {
+      background: #b51f2a;
+      color: white;
+      border: 0;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>FHINIX AI</h1>
+
+  <div class="painel">
+    <h2>Painel principal</h2>
+    <p>Uma nova versão está sendo preparada.</p>
+    <p id="status">Sistema iniciado.</p>
+    <input id="mensagem" placeholder="Digite uma mensagem...">
+    <button onclick="testar()">Testar interface</button>
+  </div>
+
+  <script>
+    function testar() {
+      const campo = document.getElementById("mensagem");
+      const status = document.getElementById("status");
+
+      if (campo.value.trim() === "") {
+        status.textContent = "Digite uma mensagem primeiro.";
+      } else {
+        status.textContent =
+          "Interface funcionando! A conexão com a IA será configurada depois.";
+      }
+    }
+  </script>
+</body>
+</html>
