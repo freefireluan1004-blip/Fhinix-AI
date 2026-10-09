@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#09090d">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>FHINIX AI</title>
+<style>
+:root{color-scheme:dark;--bg:#09090d;--panel:#14141b;--panel2:#1b1b24;--line:#30303b;--accent:#ff303d;--accent2:#a10e25;--text:#f7f7fb;--muted:#aaaab7;--good:#70e1a1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#301016 0,#111016 35%,var(--bg) 70%);font-family:system-ui,-apple-system,sans-serif;color:var(--text);min-height:100vh;display:flex;justify-content:center}
+.app{width:100%;max-width:820px;min-height:100vh;display:flex;flex-direction:column;padding:14px}
+header{display:flex;align-items:center;gap:12px;padding:12px 2px 16px;border-bottom:1px solid var(--line)}
+.logo{width:48px;height:48px;flex-shrink:0;border-radius:15px;background:linear-gradient(135deg,#ff303d,#4c0711);display:grid;place-items:center;font-size:26px;font-weight:900;box-shadow:0 0 26px #ff303d2b}
+h1{font-size:20px;letter-spacing:.5px;margin:0}header p{margin:3px 0 0;color:var(--muted);font-size:12px}.status{margin-left:auto;color:var(--good);font-size:11px;white-space:nowrap}
+.chat{flex:1;padding:18px 0;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:90%;padding:12px 14px;border-radius:17px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{align-self:flex-start;background:linear-gradient(145deg,#191920,#121218);border:1px solid #33303a;border-bottom-left-radius:5px}
+.user{align-self:flex-end;background:linear-gradient(135deg,#8e1020,#d51e31);border:1px solid #ff5260;border-bottom-right-radius:5px}
+small{display:block;color:#c0bac7;font-size:10px;margin-bottom:4px}
+.composer{display:flex;gap:8px;position:sticky;bottom:0;background:rgba(9,9,13,.96);padding:10px 0 calc(10px + env(safe-area-inset-bottom))}
+input,select,textarea{width:100%;min-width:0;border:1px solid var(--line);background:#111117;color:var(--text);border-radius:12px;padding:12px;font:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}.composer input{flex:1;border-radius:15px;padding:14px}
+button{border:0;border-radius:13px;background:var(--accent);color:white;font-weight:750;padding:11px 14px;font:inherit;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}.tools{display:flex;gap:8px;flex-wrap:wrap;padding:6px 0 12px}.tools button{background:#1c1c25;color:var(--text);border:1px solid var(--line);font-size:12px;padding:9px 11px}
+.repair-status{flex-basis:100%;margin:2px 0 6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#111117;color:var(--muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+
+.settings{display:none;background:#121218;border:1px solid #3b2930;border-radius:16px;padding:14px;margin:10px 0 14px;gap:10px}.settings.open{display:grid}.settings h2{font-size:15px;margin:0}.settings p{font-size:12px;line-height:1.45;color:var(--muted);margin:0}.field{display:grid;gap:6px}.field label{font-size:12px;color:#d6d0dc}.two{display:grid;grid-template-columns:1fr;gap:10px}.hint{font-size:11px;color:var(--muted)}.warning{border-left:3px solid var(--accent);padding:8px 10px;background:#291117;border-radius:6px;color:#f4cbd0;font-size:12px;line-height:1.45}
+footer{text-align:center;color:var(--muted);font-size:10px;line-height:1.5;padding:7px 0 12px}
+@media(min-width:600px){.app{padding:20px}.two{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="logo">F</div><div><h1>FHINIX AI</h1><p>v1.2 · DVL Labs</p><p>Criado por Diogo Vieira Lopes · DVL Labs</p></div><button id="headerSettingsBtn" type="button" aria-label="Abrir configurações" style="margin-left:auto;padding:10px 12px">⚙️</button><div id="status" class="status">● modo local</div></header>
+<section id="settings" class="settings">
+<h2>⚙️ Conectar ao servidor da FHINIX AI</h2>
+<p>Informe o endereço público do servidor da DVL Labs hospedado no Render. A chave do provedor fica no servidor e nunca deve ser colada aqui.</p>
+<div class="field"><label for="backendUrl">Endereço do servidor (Render)</label><input id="backendUrl" inputmode="url" placeholder="https://seu-servico.onrender.com" autocomplete="url"></div>
+<div class="field"><label for="appToken">Token do aplicativo (se configurado no Render)</label><input id="appToken" type="password" placeholder="Token de acesso opcional" autocomplete="off"></div>
+<div class="field"><label><input id="autoReview" type="checkbox" checked style="width:auto;margin-right:8px;vertical-align:middle"> Autoaperfeiçoamento: revisar respostas automaticamente</label><p class="hint">Faz uma segunda chamada ao modelo para procurar contradições e corrigir a resposta. Pode aumentar a demora e o uso de créditos.</p></div>
+<div class="field"><label><input id="autoRepair" type="checkbox" checked style="width:auto;margin-right:8px;vertical-align:middle"> AutoFix: diagnosticar erros de código automaticamente</label><p class="hint">Se um erro JavaScript for detectado, a IA poderá propor uma versão corrigida e preparar um novo HTML para baixar. O navegador não permite sobrescrever o arquivo original automaticamente.</p></div>
+
+<div class="warning">Segurança: a chave da API do modelo deve ficar somente nas variáveis de ambiente do servidor. Este aplicativo salva apenas o endereço público do servidor. As mensagens enviadas ao chat serão processadas pelo serviço configurado.</div>
+<div class="tools"><button id="connectBtn" type="button">Testar e conectar</button><button id="forgetKeyBtn" type="button">Desconectar servidor</button></div>
+<p>Antes de usar, confirme a idade mínima e as regras do provedor com um responsável quando necessário. Não minta sua idade nem contorne bloqueios.</p>
+</section>
+<main id="chat" class="chat" aria-live="polite"></main>
+<div class="tools">
+<button id="settingsBtn" type="button">⚙️ Modelo de IA</button>
+<button id="voiceBtn" type="button">🎙️ Falar</button>
+<button id="speakToggleBtn" type="button" aria-pressed="false">🔊 Ler respostas: desligado</button>
+<button id="repairNowBtn" type="button">🛠️ Diagnosticar/reparar código</button>
+<p id="repairStatus" class="hint repair-status" role="status" aria-live="polite">Reparação de código: aguardando conexão com o modelo.</p>
+<button id="downloadRepairBtn" type="button" hidden>⬇️ Baixar versão reparada</button>
+<button type="button" onclick="sendQuick('como você funciona e como pode se melhorar?')">🧠 Como funciono?</button>
+<button type="button" onclick="sendQuick('ajuda')">Comandos</button>
+<button type="button" onclick="sendQuick('que horas são')">🕒 Horário</button>
+<button type="button" onclick="sendQuick('abrir YouTube')">▶️ YouTube</button>
+<button type="button" onclick="sendQuick('o que você lembra?')">Memória</button>
+<button type="button" onclick="clearMemory()">Apagar memória</button>
+<button type="button" onclick="newChat()">Nova conversa</button>
+</div>
+<form id="form" class="composer"><input id="entry" autocomplete="off" placeholder="Converse com a FHINIX AI..." aria-label="Mensagem"><button id="sendBtn" type="submit">Enviar</button></form>
+<footer>Preto e vermelho · Memória local · Voz · AutoFix experimental.<br>Criado por Diogo Vieira Lopes · DVL Labs · FHINIX AI v1.2<br>Revisões e correções são sugestões: teste antes de usar. A conexão com modelo externo é opcional.</footer>
+</div>
+<script>
+const KEY='fhinix_ai_memory_v1';
+let memory={name:'',facts:[],history:[]};
+let backendUrl='',appToken='',usingAI=false,busy=false;
+const REPAIR_KEY='fhinix_ai_repair_log_v1';
+let repairLog=[];
+try{repairLog=JSON.parse(localStorage.getItem(REPAIR_KEY)||'[]');if(!Array.isArray(repairLog))repairLog=[];}catch(e){repairLog=[];}
+function logRepair(type,detail){repairLog.push({type,detail:String(detail||'').slice(0,220),at:new Date().toISOString()});repairLog=repairLog.slice(-40);try{localStorage.setItem(REPAIR_KEY,JSON.stringify(repairLog));}catch(e){}}
+let repairInProgress=false, lastRuntimeError='', repairedHtmlUrl='';
+const repairStatusEl=document.getElementById('repairStatus');
+function setRepairStatus(message){if(repairStatusEl)repairStatusEl.textContent='Reparação de código: '+message;}
+function currentMainScript(){return document.scripts[0]?.textContent||'';}
+function cleanGeneratedCode(text){return String(text||'').trim().replace(/^```(?:javascript|js)?\s*/i,'').replace(/\s*```$/,'').trim();}
+function prepareRepairedDownload(code){
+ const parsed=new DOMParser().parseFromString('<!doctype html>\n'+document.documentElement.outerHTML,'text/html');
+ const scripts=parsed.querySelectorAll('script');
+ if(!scripts.length)throw new Error('Não encontrei o script principal no HTML.');
+ scripts[0].textContent=code;
+ const blob=new Blob(['<!doctype html>\n'+parsed.documentElement.outerHTML],{type:'text/html;charset=utf-8'});
+ if(repairedHtmlUrl)URL.revokeObjectURL(repairedHtmlUrl);
+ repairedHtmlUrl=URL.createObjectURL(blob);
+ const link=document.getElementById('downloadRepairBtn');
+ link.hidden=false;link.onclick=()=>{const a=document.createElement('a');a.href=repairedHtmlUrl;a.download='FHINIX_AI_reparada.html';document.body.appendChild(a);a.click();a.remove();};
+}
+async function diagnoseAndRepairCode(reason){
+ if(repairInProgress)return;
+ if(!usingAI||!backendUrl){setRepairStatus('conecte o servidor da FHINIX nas configurações para gerar uma correção. Informe o endereço do Render e toque em “Testar e conectar”.');document.getElementById('settings').classList.add('open');return;}
+ repairInProgress=true;
+ const button=document.getElementById('repairNowBtn');if(button)button.disabled=true;
+ setRepairStatus('analisando o erro e preparando uma correção. Aguarde; isso pode levar alguns segundos...');
+ try{
+  const source=currentMainScript();
+  if(!source.trim())throw new Error('Não foi possível ler o script principal.');
+  const prompt='Você é um engenheiro de manutenção de JavaScript. Corrija o erro informado no código da aplicação FHINIX AI. Retorne o SCRIPT COMPLETO corrigido, sem Markdown, sem cercas de código e sem explicações. Preserve as funções e o visual existentes. Faça apenas mudanças necessárias. Não adicione bibliotecas externas, não remova controles de segurança, não grave a chave da API em armazenamento e não envie dados para outros destinos. Se não conseguir identificar uma correção segura, devolva o código original sem alterações.\n\nERRO DETECTADO:\n'+String(reason||'Solicitação manual de diagnóstico').slice(0,2500)+'\n\nSCRIPT ATUAL COMPLETO:\n'+source;
+  const answer=await callModel([{role:'system',content:'Retorne apenas JavaScript completo e válido para substituir o script principal da aplicação. Preserve o código e a privacidade. Nunca inclua a chave da API.'},{role:'user',content:prompt}],7000);
+  const candidate=cleanGeneratedCode(answer);
+  if(!candidate)throw new Error('O modelo não retornou código.');
+  // Verifica somente sintaxe. Isso não prova que o programa funcionará corretamente.
+  new Function(candidate);
+  if(candidate===source){logRepair('diagnóstico sem alteração','O modelo não encontrou uma mudança clara.');setRepairStatus('o modelo não propôs mudanças. Nenhum arquivo foi alterado.');return;}
+  prepareRepairedDownload(candidate);
+  logRepair('correção preparada','Foi gerado um HTML de teste; a sintaxe JavaScript passou na validação.');
+  setRepairStatus('correção preparada e sintaxe validada. Baixe o HTML e teste a nova versão. O arquivo original continua intacto.');
+ }catch(err){logRepair('reparação falhou',err.message||err);setRepairStatus('não foi possível gerar/validar uma correção: '+String(err.message||err).slice(0,180));}
+ finally{repairInProgress=false;if(button)button.disabled=false;}
+}
+window.addEventListener('error',event=>{
+ const detail=(event.message||'Erro JavaScript')+' ('+(event.filename||'arquivo desconhecido')+':'+(event.lineno||'?')+')';
+ lastRuntimeError=detail;logRepair('erro JavaScript detectado',detail);setRepairStatus('erro detectado; consulte o registro e use a reparação automática.');
+ if(document.getElementById('autoRepair')?.checked&&usingAI)diagnoseAndRepairCode(detail);
+});
+window.addEventListener('unhandledrejection',event=>{
+ const detail='Promise rejeitada: '+String(event.reason?.message||event.reason||'motivo desconhecido');
+ lastRuntimeError=detail;logRepair('rejeição não tratada',detail);
+ if(document.getElementById('autoRepair')?.checked&&usingAI)diagnoseAndRepairCode(detail);
+});
+try{memory=Object.assign(memory,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
+const chat=document.getElementById('chat'),entry=document.getElementById('entry'),statusEl=document.getElementById('status');
+function save(){try{localStorage.setItem(KEY,JSON.stringify(memory))}catch(e){add('bot','Não consegui salvar a memória neste navegador. O armazenamento pode estar desativado.');}}
+function add(who,text){const box=document.createElement('div');box.className='msg '+who;const label=document.createElement('small');label.textContent=who==='bot'?'FHINIX AI':'Você';box.appendChild(label);box.appendChild(document.createTextNode(text));chat.appendChild(box);window.scrollTo(0,document.body.scrollHeight);}
+function systemPrompt(){const facts=(memory.facts||[]).slice(-30).join('; ');return 'Você é FHINIX AI, uma assistente em desenvolvimento que fala português brasileiro de modo natural, parceira, criativa e direta, sem exagerar. Seja honesta sobre limitações, não invente fatos. Seu criador é Diogo Vieira Lopes, da DVL Labs; quando perguntarem quem é seu criador, informe o nome completo e a marca. Explique que modelos de linguagem geram respostas usando contexto e padrões aprendidos durante o treinamento; não alegue consciência humana. Diferencie adaptação via contexto/memória, revisão de respostas e reparo de código de treinamento do modelo. O app pode revisar respostas, guardar lembranças localmente, registrar erros e preparar um HTML corrigido para download após validar a sintaxe, mas não pode alterar os parâmetros do modelo remoto, garantir que a correção funcione, sobrescrever sozinho o HTML original nem modificar o APK instalado. Nunca diga que executou testes ou alterou código sem evidência. Sugira aprovação humana e testes antes de usar código reparado. O nome salvo do usuário é '+(memory.name||'desconhecido')+'. Lembranças fornecidas pelo usuário: '+(facts||'nenhuma')+'. Se o usuário pedir para lembrar uma informação, oriente-o a usar o comando “lembre que ...”, que é salvo localmente pelo aplicativo.';}
+function runDeviceCommand(raw){
+ const t=raw.toLocaleLowerCase('pt-BR').trim();
+ if(/quem (é|e) (o )?seu criador|quem te criou|quem criou voc(e|ê)|quem (é|e) o desenvolvedor|quem fez voc(e|ê)/.test(t)) return 'Meu criador é Diogo Vieira Lopes, da DVL Labs. Ele desenvolve a FHINIX AI.';
+ const now=new Date();
+ if(/^(que horas são|que horas sao|horas|qual é a hora|qual e a hora)$/.test(t)) return 'Agora são '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'.';
+ if(/^(que dia é hoje|que dia e hoje|qual a data|data de hoje|data)$/.test(t)) return 'Hoje é '+now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})+'.';
+ if(/^(abrir|abre) (youtube|yt)$/.test(t)){window.open('https://m.youtube.com/','_blank','noopener');return 'Abrindo o YouTube. Se o navegador perguntar, escolha o aplicativo YouTube.';}
+ if(/^(abrir|abre) (google|pesquisa|pesquisar)$/.test(t)){window.open('https://www.google.com/','_blank','noopener');return 'Abrindo o Google.';}
+ if(/^(abrir|abre) (roblox)$/.test(t)){window.open('https://www.roblox.com/','_blank','noopener');return 'Abrindo o Roblox. Se estiver instalado, o Android pode oferecer abrir no aplicativo.';}
+ if(/^(pesquisar|pesquisa|procura) .+/.test(t)){
+   const q=raw.replace(/^(pesquisar|pesquisa|procura)\s+/i,'').trim();
+   if(q){window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank','noopener');return 'Pesquisando na internet por: '+q+'.';}
+ }
+ if(/^(abrir|abre) (configurações|configuracoes|modelo de ia)$/.test(t)){document.getElementById('settings').classList.add('open');document.getElementById('settings').scrollIntoView({behavior:'smooth',block:'start'});return 'Configurações abertas.';}
+ return null;
+}
+function localReply(raw){
+ const t=raw.toLocaleLowerCase('pt-BR').trim();
+ if(/como (você|voce) funciona|como funciona uma ia|como (você|voce) se (auto)?melhora|como pode se melhorar|auto.?melhoria/.test(t)){
+  return 'COMO EU FUNCIONO\\n• Sou a FHINIX AI, uma interface que envia suas mensagens a um modelo de linguagem quando há conexão configurada. O modelo gera respostas a partir do texto, do contexto enviado e dos padrões aprendidos no treinamento.\\n• O histórico recente pode ser enviado como contexto; as lembranças que você salva ficam no armazenamento local deste navegador. Isso não significa que eu me lembre de tudo automaticamente.\\n• Ferramentas do aplicativo, como voz e diagnóstico de código, dependem do navegador, da conexão e de modelos compatíveis.\\n\\nCOMO POSSO ME MELHORAR\\n• Avaliar respostas e procurar contradições ou afirmações sem base.\\n• Usar seu feedback e suas lembranças salvas para adaptar respostas futuras neste aplicativo.\\n• Registrar erros, tentar novamente algumas chamadas e propor correções no código.\\n• Validar a sintaxe do código proposto antes de oferecer um novo HTML para baixar.\\n\\nLIMITES IMPORTANTES\\n• O autoaperfeiçoamento desta versão é assistido: revisão de respostas, uso do contexto/memória local e registro de erros. Isso não treina nem altera os parâmetros internos do modelo hospedado no OpenRouter.\\n• Eu não consigo garantir que uma resposta ou correção esteja certa, nem sobrescrever automaticamente o arquivo original ou modificar o APK instalado. Uma correção precisa ser testada e aprovada por você.\\n• Não devo inventar que executei testes, pesquisei na internet ou mudei meu próprio código se isso não aconteceu.';
+ }
+
+ if(['diagnóstico','diagnostico','status da autocorreção','status da autocorrecao'].includes(t)){const recent=repairLog.slice(-5);return 'Diagnóstico da autocorreção local:\n• Eventos registrados: '+repairLog.length+'\n• Revisão automática: '+(document.getElementById('autoReview')?.checked===false?'desativada':'ativada')+'\n'+(recent.length?'Eventos recentes:\n• '+recent.map(x=>x.type+': '+x.detail).join('\n• '):'Nenhum erro ou reparo registrado ainda.')+'\n\nReparação de código: detecção de erros JavaScript, geração de uma versão corrigida para baixar e validação de sintaxe. O arquivo original não é sobrescrito e a validação não garante ausência de bugs.';}
+ if(['o que você corrigiu?','o que voce corrigiu?','histórico de correções','historico de correcoes'].includes(t)){return repairLog.length?'Registro recente de autocorreção:\n• '+repairLog.slice(-10).map(x=>new Date(x.at).toLocaleString('pt-BR')+' | '+x.type+' | '+x.detail).join('\n• '):'Ainda não precisei fazer nenhuma tentativa de autocorreção.';}
+ const command=runDeviceCommand(raw); if(command)return command;
+ if(t.includes('abrir configuração do modelo')||t.includes('abrir configuracao do modelo')||t==='modelo de ia'||t==='configurações'||t==='configuracoes'){document.getElementById('settings').classList.add('open');return 'Abri as configurações acima da conversa. Role para cima para preencher os campos.';}
+ if(['ajuda','/ajuda','comandos'].includes(t))return "Comandos disponíveis:\n• abrir YouTube\n• abrir Google\n• abrir Roblox\n• pesquisar [assunto]\n• que horas são\n• que dia é hoje\n• meu nome é [nome]\n• lembre que [informação]\n• o que você lembra?\n• esquecer tudo\n• abrir configuração do modelo\n• diagnóstico\n• o que você corrigiu?\n• 🎙️ Falar: ditado por microfone (se suportado)\n• 🔊 Ler respostas: leitura em voz alta\n\nAlguns comandos abrem páginas no navegador; o Android decide se pode encaminhar para um aplicativo.";
+ if(t.startsWith('meu nome é ')||t.startsWith('meu nome e ')){const n=raw.replace(/^meu nome (é|e)\s*/i,'').trim();if(n){memory.name=n;save();return 'Fechado, '+n+'! Vou guardar seu nome neste navegador.';}return 'Diga: meu nome é Ana';}
+ if(t.startsWith('lembre que ')||t.startsWith('lembra que ')){const fact=raw.replace(/^lembre? que\s*/i,'').trim();if(fact&&!memory.facts.includes(fact))memory.facts.push(fact);save();return 'Guardado na minha memória local. 🧠';}
+ if(t.includes('o que você lembra')||t.includes('o que voce lembra')){const a=[];if(memory.name)a.push('Seu nome é '+memory.name+'.');if(memory.facts.length)a.push('Lembro também de:\n• '+memory.facts.join('\n• '));return a.join('\n')||'Ainda não guardei nada. Experimente: “lembre que gosto de Roblox”.';}
+ if(t==='esquecer meu nome'){memory.name='';save();return 'Apaguei o nome salvo.'}
+ if(t==='esquecer tudo'){memory={name:'',facts:[],history:[]};save();return 'Apaguei as lembranças locais salvas por este app.'}
+ if(['oi','olá','ola','eai','e aí','salve','bom dia','boa tarde','boa noite'].includes(t))return (memory.name?'Fala, '+memory.name+'! ':'Salve! ')+'Sou a FHINIX AI. Qual é a missão de hoje?';
+ if(t.includes('seu nome')||t.includes('quem é você')||t.includes('quem e voce'))return 'Sou a FHINIX AI. Estou em modo local; conecte um modelo nas configurações para respostas mais flexíveis.';
+ return 'Ainda não sei responder isso no modo local. Para respostas abertas, configure um modelo na opção “Modelo de IA”.';
+}
+async function callModel(messages, maxTokens=1200){
+ if(!backendUrl)throw new Error('Configure o endereço do servidor da FHINIX em Modelo de IA.');
+ const base=backendUrl.trim().replace(/\/+$/,'');
+ const headers={'Content-Type':'application/json'};if(appToken)headers['x-fhinix-token']=appToken;
+ const response=await fetch(base+'/chat',{method:'POST',headers,body:JSON.stringify({messages,max_tokens:maxTokens})});
+ let data={};try{data=await response.json()}catch(e){}
+ if(!response.ok){const detail=data?.error?.message||data?.message||('HTTP '+response.status);throw new Error(detail);}
+ const choice=data?.choices?.[0],content=choice?.message?.content;
+ const answer=typeof content==='string'?content:Array.isArray(content)?content.map(part=>typeof part==='string'?part:(part?.text||'')).join(''):'';
+ if(!answer.trim()){
+  const reason=choice?.finish_reason||'desconhecido';
+  if(reason==='length')throw new Error('O modelo atingiu o limite de tokens.');
+  throw new Error('O modelo respondeu sem texto (motivo: '+reason+').');
+ }
+ return answer.trim();
+}
+async function askModel(userText){
+ const history=(memory.history||[]).slice(-12).flatMap(x=>[{role:'user',content:x.user},{role:'assistant',content:x.answer}]);
+ const facts=(memory.facts||[]).slice(-30).join('; ');
+ const system='Você é FHINIX AI v1.2, uma assistente em português brasileiro, parceira, inteligente, criativa e direta. Seu criador é Diogo Vieira Lopes, da DVL Labs. Quando perguntarem quem é seu criador, responda claramente: \'Meu criador é Diogo Vieira Lopes, da DVL Labs.\' Não atribua a criação a outra pessoa. Explique corretamente que um modelo de linguagem gera respostas com base no texto, no contexto e em padrões aprendidos durante o treinamento; não alegue consciência humana nem memória perfeita. Diferencie memória/contexto, revisão de respostas, reparo de código e treinamento do modelo. Seja honesta sobre capacidades reais: o app pode usar ditado por voz e leitura em voz alta quando o navegador suporta; pode registrar erros JavaScript, tentar novamente chamadas e preparar um HTML corrigido para download após validar a sintaxe. Essas funções são experimentais e precisam de testes. Você não pode alterar os parâmetros internos do modelo remoto, garantir que o código reparado funcione, sobrescrever automaticamente o HTML original nem modificar o APK instalado. Nunca afirme que executou testes, pesquisou na internet ou alterou código sem evidência. Recomende revisar e testar mudanças antes de usá-las. Não afirme que pesquisou na internet ou abriu apps sem evidência. Memória do usuário, salva por ele neste navegador: nome='+(memory.name||'não informado')+'; fatos='+(facts||'nenhum')+'.';
+ let answer;
+ try{answer=await callModel([{role:'system',content:system},...history,{role:'user',content:userText}],1200);}
+ catch(firstError){
+  // Uma tentativa automática de recuperação ajuda em respostas vazias/limites temporários, sem entrar em loop.
+  logRepair('tentativa de recuperação',firstError.message||firstError);
+  try{answer=await callModel([{role:'system',content:system+' Responda de forma concisa e em texto simples.'},...history,{role:'user',content:userText}],700);logRepair('recuperação concluída','A segunda tentativa retornou uma resposta.');}
+  catch(secondError){logRepair('recuperação falhou',secondError.message||secondError);throw secondError;}
+ }
+ const reviewEnabled=document.getElementById('autoReview')?.checked!==false;
+ if(reviewEnabled){
+  try{
+   const reviewed=await callModel([
+    {role:'system',content:'Você é o revisor interno da FHINIX AI. Revise a resposta procurando contradições, erros lógicos, afirmações sem base e promessas de capacidades inexistentes. Preserve o idioma e o estilo. Corrija apenas problemas claros; não acrescente fatos especulativos. Se não houver erro claro, devolva a resposta original. Retorne somente a versão final para o usuário, sem explicar a revisão.'},
+    {role:'user',content:'Pergunta original do usuário:\n'+userText+'\n\nResposta a revisar:\n'+answer}
+   ],1200);
+   if(reviewed.trim()!==answer.trim())logRepair('resposta revisada','A revisão automática alterou a resposta antes de exibi-la.');
+   answer=reviewed;
+  }catch(reviewError){logRepair('revisão indisponível',reviewError.message||reviewError);/* usa a resposta original se o revisor falhar */}
+ }
+ return answer;
+}
+function setBusy(value){busy=value;document.getElementById('sendBtn').disabled=value;entry.disabled=value;document.getElementById('sendBtn').textContent=value?'...':'Enviar';}
+document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const text=entry.value.trim();if(!text||busy)return;add('user',text);entry.value='';setBusy(true);let answer;
+ try{
+  const t=text.toLocaleLowerCase('pt-BR').trim();
+  if(t.startsWith('meu nome é ')||t.startsWith('meu nome e ')||t.startsWith('lembre que ')||t.startsWith('lembra que ')||t.includes('o que você lembra')||t.includes('o que voce lembra')||/quem (é|e) (o )?seu criador|quem te criou|quem criou voc(e|ê)|quem (é|e) o desenvolvedor|quem fez voc(e|ê)/.test(t)||/como (você|voce) funciona|como funciona uma ia|como (você|voce) se (auto)?melhora|como pode se melhorar|auto.?melhoria/.test(t)||t==='esquecer meu nome'||t==='esquecer tudo'||['ajuda','/ajuda','comandos','diagnóstico','diagnostico','status da autocorreção','status da autocorrecao','o que você corrigiu?','o que voce corrigiu?','histórico de correções','historico de correcoes'].includes(t)){
+   answer=localReply(text);
+  }else if(usingAI){answer=await askModel(text);}
+  else{answer=localReply(text);}
+  add('bot',answer);
+  memory.history.push({user:text,answer:answer,at:new Date().toISOString()});memory.history=memory.history.slice(-60);save();
+ }catch(err){add('bot','Não consegui falar com o servidor da FHINIX. Confira a internet, o endereço do Render e as variáveis de ambiente do servidor. Detalhe: '+String(err.message||err).slice(0,300));}
+ finally{setBusy(false);entry.focus();}
+});
+function sendQuick(text){entry.value=text;document.getElementById('form').requestSubmit();}
+function clearMemory(){if(confirm('Apagar nome e todas as lembranças salvas pela FHINIX AI?')){memory={name:'',facts:[],history:[]};save();add('bot','Memória apagada. Vamos começar de novo.');}}
+function newChat(){if(confirm('Começar uma conversa nova? O histórico visual será limpo, mas a memória salva será mantida.')){chat.innerHTML='';memory.history=[];save();add('bot','Nova conversa iniciada. Suas lembranças salvas foram mantidas.');}}
+function toggleSettings(){const panel=document.getElementById('settings');panel.classList.toggle('open');if(panel.classList.contains('open')){setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),80);}}
+document.getElementById('repairNowBtn').addEventListener('click',()=>diagnoseAndRepairCode(lastRuntimeError||'Diagnóstico manual solicitado pelo usuário: revise o script em busca de bugs claros e corrija somente se necessário.'));
+
+// VOICE SYSTEM: browser-supported speech recognition and speech synthesis.
+let speakReplies=false, recognition=null, listening=false;
+const voiceBtn=document.getElementById('voiceBtn');
+const speakToggleBtn=document.getElementById('speakToggleBtn');
+function setVoiceStatus(message){ if(voiceBtn) voiceBtn.title=message; }
+function startDictation(){
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SpeechRecognition){add('bot','Este navegador não oferece reconhecimento de voz. Tente uma versão atualizada do Chrome ou use o teclado por voz do Android.');return;}
+ if(listening){try{recognition.stop();}catch(e){}return;}
+ recognition=new SpeechRecognition(); recognition.lang='pt-BR'; recognition.interimResults=false; recognition.maxAlternatives=1;
+ recognition.onstart=()=>{listening=true;voiceBtn.textContent='⏹️ Parar de ouvir';setVoiceStatus('Ouvindo em português.');};
+ recognition.onresult=e=>{const heard=e.results?.[0]?.[0]?.transcript||'';if(heard){entry.value=(entry.value+' '+heard).trim();entry.focus();}};
+ recognition.onerror=e=>{add('bot','Reconhecimento de voz: '+(e.error||'não foi possível reconhecer a fala')+'. Confira a permissão do microfone.');};
+ recognition.onend=()=>{listening=false;voiceBtn.textContent='🎙️ Falar';};
+ try{recognition.start();}catch(e){add('bot','Não consegui iniciar o microfone: '+e.message);}
+}
+voiceBtn.addEventListener('click',startDictation);
+speakToggleBtn.addEventListener('click',()=>{
+ speakReplies=!speakReplies;speakToggleBtn.textContent='🔊 Ler respostas: '+(speakReplies?'ligado':'desligado');speakToggleBtn.setAttribute('aria-pressed',String(speakReplies));
+ if(!speakReplies&&window.speechSynthesis)window.speechSynthesis.cancel();
+});
+const originalAdd=add;
+add=function(who,text){
+ originalAdd(who,text);
+ if(who==='bot'&&speakReplies&&window.speechSynthesis&&'SpeechSynthesisUtterance' in window){
+  try{window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(String(text));utterance.lang='pt-BR';window.speechSynthesis.speak(utterance);}catch(e){logRepair('voz indisponível',e.message||e);}
+ }
+};
+
+document.getElementById('settingsBtn').addEventListener('click',toggleSettings);
+document.getElementById('headerSettingsBtn').addEventListener('click',()=>{const panel=document.getElementById('settings');if(!panel.classList.contains('open'))panel.classList.add('open');setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),80);});
+const CONFIG_KEY='fhinix_ai_saved_config_v2';
+try{localStorage.removeItem('fhinix_ai_saved_config_v1');}catch(e){}
+function saveConfig(){try{localStorage.setItem(CONFIG_KEY,JSON.stringify({backendUrl,appToken}));return true;}catch(e){add('bot','Não consegui salvar as configurações neste navegador. Verifique as permissões de armazenamento.');return false;}}
+function restoreConfig(){try{const saved=JSON.parse(localStorage.getItem(CONFIG_KEY)||'null');if(!saved||typeof saved!=='object')return;backendUrl=String(saved.backendUrl||'').trim().replace(/\/+$/,'');appToken=String(saved.appToken||'');document.getElementById('backendUrl').value=backendUrl;document.getElementById('appToken').value=appToken;if(backendUrl){statusEl.textContent='● servidor configurado';statusEl.style.color='var(--good)';}}catch(e){}}
+document.getElementById('connectBtn').addEventListener('click',async()=>{backendUrl=document.getElementById('backendUrl').value.trim().replace(/\/+$/,'');appToken=document.getElementById('appToken').value.trim();if(!/^https?:\/\//i.test(backendUrl)){add('bot','Informe um endereço válido do servidor, começando com https://.');return;}const btn=document.getElementById('connectBtn');btn.disabled=true;btn.textContent='Testando…';try{const response=await fetch(backendUrl+'/health',{method:'GET'});let data={};try{data=await response.json();}catch(e){}if(!response.ok||data.ok!==true)throw new Error(data.error||('HTTP '+response.status));if(data.modelConfigured!==true)throw new Error('O servidor responde, mas falta configurar OPENROUTER_API_KEY nas variáveis de ambiente do Render.');usingAI=true;saveConfig();statusEl.textContent='● servidor conectado';statusEl.style.color='var(--good)';document.getElementById('settings').classList.remove('open');add('bot','Servidor da FHINIX acessível. Agora vou usar esse servidor para enviar as mensagens. Isso confirma a conexão, mas ainda precisamos testar uma resposta real do modelo.');}catch(err){usingAI=false;statusEl.textContent='● servidor não testado';statusEl.style.color='var(--accent)';add('bot','Não consegui confirmar o servidor. Verifique o endereço do Render, se o serviço está ativo e se /health responde. Detalhe: '+String(err.message||err).slice(0,220));}finally{btn.disabled=false;btn.textContent='Testar e conectar';}});
+document.getElementById('forgetKeyBtn').addEventListener('click',()=>{backendUrl='';appToken='';usingAI=false;document.getElementById('backendUrl').value='';document.getElementById('appToken').value='';try{localStorage.removeItem(CONFIG_KEY);}catch(e){}statusEl.textContent='● modo local';statusEl.style.color='var(--good)';add('bot','Desconectei o servidor e apaguei o endereço salvo neste dispositivo.');});
+restoreConfig();
+add('bot','Sistema iniciado, FHINIX. 🔴\nEstou em modo local, com memória, comandos básicos e registro de autocorreção. Quando um modelo está conectado, posso revisar respostas, tentar novamente chamadas que falhem e preparar uma cópia corrigida do HTML após diagnosticar um erro. Digite “ajuda” para ver os comandos.\nNota: uma página web não pode controlar livremente todo o Android; algumas ações dependem das permissões do navegador.');
+</script>
+<script>if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
+</body>
+</html>
