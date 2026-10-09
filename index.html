@@ -1,8 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
- <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#b00000">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09090d">
@@ -101,11 +99,18 @@ async function askModel(userText){
  const history=(memory.history||[]).slice(-12).flatMap(x=>[{role:'user',content:x.user},{role:'assistant',content:x.answer}]);
  const facts=(memory.facts||[]).slice(-30).join('; ');
  const system='Você é FHINIX AI, uma assistente em português brasileiro com personalidade própria: parceira, inteligente, criativa e direta, sem exagero. Não diga que tem capacidades que não tem. Memória do usuário, salva por ele neste navegador: nome='+(memory.name||'não informado')+'; fatos='+ (facts||'nenhum')+'. Respeite o contexto e não invente informações.';
- const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:model,messages:[{role:'system',content:system},...history,{role:'user',content:userText}],temperature:0.7,max_tokens:700})});
+ const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:model,messages:[{role:'system',content:system},...history,{role:'user',content:userText}],temperature:0.7,max_tokens:1200,reasoning:{exclude:true}})});
  let data={};try{data=await response.json()}catch(e){}
  if(!response.ok){const detail=data?.error?.message||data?.message||('HTTP '+response.status);throw new Error(detail);}
- const answer=data?.choices?.[0]?.message?.content;
- if(typeof answer!=='string'||!answer.trim())throw new Error('O provedor não retornou uma resposta de texto.');
+ const choice=data?.choices?.[0];
+ const content=choice?.message?.content;
+ const answer=typeof content==='string'?content:Array.isArray(content)?content.map(part=>typeof part==='string'?part:(part?.text||'')).join(''):'';
+ if(!answer.trim()){
+  const reason=choice?.finish_reason||'desconhecido';
+  if(reason==='length')throw new Error('O modelo usou o limite de tokens antes de gerar a resposta. Tente novamente ou escolha outro modelo.');
+  if(data?.error?.message)throw new Error(data.error.message);
+  throw new Error('O modelo respondeu sem texto (motivo: '+reason+'). Tente novamente ou escolha outro modelo gratuito.');
+ }
  return answer.trim();
 }
 function setBusy(value){busy=value;document.getElementById('sendBtn').disabled=value;entry.disabled=value;document.getElementById('sendBtn').textContent=value?'...':'Enviar';}
