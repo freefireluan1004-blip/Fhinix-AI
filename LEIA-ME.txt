@@ -1,0 +1,36 @@
+FHINIX AI v1.2 · DVL Labs
+Projeto web + backend seguro + base para Android/Capacitor
+
+O QUE ESTÁ PREPARADO
+- Interface sem gerador de imagens.
+- Frontend envia mensagens para o endpoint /chat do seu próprio servidor.
+- Chave OPENROUTER_API_KEY fica no servidor, nunca no HTML/APK.
+- Endpoint /health para verificar se o serviço está ativo.
+- Limite básico de requisições por IP e validação de mensagens.
+- Estrutura Capacitor para Android.
+
+IMPORTANTE
+Este pacote não é um APK compilado e ainda precisa de uma URL real do Render e de testes no dispositivo. Não publique o segredo da API nem o arquivo .env. A limitação por IP e o token opcional são proteções básicas, não substituem autenticação robusta para um serviço público.
+
+PUBLICAR NO RENDER
+1. Envie esta pasta para um repositório privado no GitHub. Não inclua .env nem chaves.
+2. No Render, crie um Web Service conectado ao repositório. Build command: npm install. Start command: npm start.
+3. Em Environment, configure OPENROUTER_API_KEY com sua chave, OPENROUTER_MODEL como openrouter/free (ou um ID de modelo válido) e FHINIX_APP_TOKEN com um token longo aleatório.
+4. Se definir FHINIX_APP_TOKEN no Render, informe o mesmo valor no campo “Token do aplicativo” nas configurações da FHINIX AI. O token dentro do app pode ser extraído, portanto serve apenas como barreira básica, não como autenticação forte. Para primeiro teste, é possível deixar essa variável vazia e confiar nos limites básicos de requisição.
+5. Depois do deploy, abra https://SEU-SERVICO.onrender.com/health. Deve retornar JSON com ok:true.
+6. Abra a FHINIX AI, vá a Modelo de IA, cole a URL base do Render e toque em Testar e conectar.
+
+GERAR O APK (NUM COMPUTADOR)
+Requisitos: Node.js LTS, Android Studio e Android SDK.
+1. Extraia o ZIP e abra um terminal na pasta do projeto.
+2. npm install
+3. npx cap add android
+4. npx cap sync android
+5. npx cap open android
+6. No Android Studio, aguarde o Gradle sincronizar e teste no emulador/celular.
+7. Build > Build Bundle(s) / APK(s) > Build APK(s).
+
+OBSERVAÇÕES
+- Ditado por voz via Web Speech API pode não funcionar em todos os WebViews Android. Testar antes de prometer suporte.
+- A memória é local ao dispositivo/navegador; não é memória permanente do modelo hospedado.
+- O modelo real é definido no servidor, não pela arquitetura da interface.

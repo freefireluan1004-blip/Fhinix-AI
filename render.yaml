@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: fhinix-ai-dvl-labs
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: openrouter/free
+      - key: FHINIX_APP_TOKEN
+        sync: false
