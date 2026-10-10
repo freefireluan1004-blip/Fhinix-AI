@@ -41,7 +41,18 @@ jobs:
           ./gradlew assembleDebug
 
       - name: Diagnosticar APK
-        run: |
+        run: 
+          echo "=== Identidade do APK ==="
+          curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/android-tools.zip
+          mkdir -p /tmp/android-tools
+          unzip -q /tmp/android-tools.zip -d /tmp/android-tools
+          SDKMANAGER=$(find /tmp/android-tools -name sdkmanager | head -1)
+          yes | "$SDKMANAGER" --sdk_root=/tmp/android-sdk "platform-tools" "build-tools;35.0.0" >/dev/null
+          AAPT=$(find /tmp/android-sdk/build-tools/35.0.0 -name aapt | head -1)
+          APKSIGNER=$(find /tmp/android-sdk/build-tools/35.0.0 -name apksigner | head -1)
+          "$AAPT" dump badging android/app/build/outputs/apk/debug/app-debug.apk | head -5
+          "$APKSIGNER" verify --verbose android/app/build/outputs/apk/debug/app-debug.apk
+
           echo "=== Informações do APK ==="
           ls -lh android/app/build/outputs/apk/debug/
           echo "=== SDK mínimo ==="
