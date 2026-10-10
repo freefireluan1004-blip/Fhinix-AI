@@ -41,7 +41,7 @@ jobs:
           ./gradlew assembleDebug
 
       - name: Diagnosticar APK
-        run: 
+        run: |
           echo "=== Identidade do APK ==="
           curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/android-tools.zip
           mkdir -p /tmp/android-tools
