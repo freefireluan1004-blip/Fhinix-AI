@@ -40,6 +40,15 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      - name: Diagnosticar APK
+        run: |
+          echo "=== Informações do APK ==="
+          ls -lh android/app/build/outputs/apk/debug/
+          echo "=== SDK mínimo ==="
+          grep -R "minSdk" android/app/build.gradle android/variables.gradle 2>/dev/null || true
+          echo "=== SDK alvo ==="
+          grep -R "targetSdk" android/app/build.gradle android/variables.gradle 2>/dev/null || true
+          
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
